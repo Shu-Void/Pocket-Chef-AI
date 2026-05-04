@@ -1,0 +1,200 @@
+<!-- templates/dashboard.html -->
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<style>
+    .dashboard-header { margin-top: 6px; color: #666; }
+    
+    .progress-container { margin-top: 18px; }
+    .progress-item { margin-bottom: 16px; }
+    .progress-label-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .progress-stats { font-size: 14px; }
+    .progress-pct { font-size: 12px; margin-left: 4px; }
+    
+    .progress-bar-bg {
+        width: 100%;
+        height: 10px;
+        background: #e0e0e0;
+        border-radius: 5px;
+        margin-top: 6px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 5px;
+        transition: width 0.4s ease;
+    }
+
+    .targets-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 15px;
+        margin-top: 12px;
+    }
+    .macro-card {
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+    }
+    .macro-value { font-size: 24px; font-weight: bold; }
+    .macro-label { font-size: 13px; color: #555; margin-top: 4px; }
+
+    .flex-header { display: flex; justify-content: space-between; align-items: center; }
+    .suggestion-list { margin-top: 12px; }
+    .suggestion-item { margin-bottom: 10px; }
+    .empty-text { margin-top: 12px; color: #888; }
+    
+    .meal-log-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+    .meal-info-sub { font-size: 13px; color: #666; }
+    .meal-type-tag { color: #888; font-size: 13px; margin-left: 8px; }
+    
+    .text-center { text-align: center; }
+</style>
+
+<div class="card">
+    <h2>Nutrition Dashboard</h2>
+    <p class="dashboard-header">
+        {{ today.strftime('%A, %d %B %Y') }}
+        &nbsp;|&nbsp; Goal: <strong>{{ user.goal }}</strong>
+    </p>
+</div>
+
+<div class="card">
+    <h3>Today's Progress</h3>
+
+    {% if logs %}
+    {% set macros = [
+        ("Calories", "%.0f"|format(totals.calories), targets.calories, "kcal", "#2e7d32"),
+        ("Protein", "%.1f"|format(totals.protein_g), targets.protein_g, "g", "#1565c0"),
+        ("Carbs", "%.1f"|format(totals.carbs_g), targets.carbs_g, "g", "#f57f17"),
+        ("Fat", "%.1f"|format(totals.fat_g), targets.fat_g, "g", "#c62828"),
+        ("Fiber", "%.1f"|format(totals.fiber_g), targets.fiber_g, "g", "#7b1fa2")
+    ] %}
+
+    <div class="progress-container">
+        {% for label, current, target, unit, color in macros %}
+        {% set pct = ((current|float / target * 100) if target > 0 else 0)|round|int %}
+        {% set bar_pct = [pct, 100]|min %}
+        <div class="progress-item">
+            <div class="progress-label-row">
+                <strong style="color:{{ color }};">{{ label }}</strong>
+                <span class="progress-stats">
+                    <strong>{{ current }}</strong> / {{ target }} {{ unit }}
+                    <span class="progress-pct" style="color:{% if pct > 100 %}#c62828{% elif pct >= 80 %}#2e7d32{% else %}#888{% endif %};">
+                        ({{ pct }}%)
+                    </span>
+                </span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" 
+                     style="width:{{ bar_pct }}%; background:{{ color }};{% if pct > 105 %} background:#c62828;{% endif %}">
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <p class="empty-text">No meals logged today. <a href="/" style="color:#2e7d32;">Upload an image</a> to get started!</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Your Daily Targets</h3>
+    <div class="targets-grid">
+        <div class="macro-card" style="background:#e8f5e9;">
+            <div class="macro-value" style="color:#2e7d32;">{{ targets.calories }}</div>
+            <div class="macro-label">Calories (kcal)</div>
+        </div>
+        <div class="macro-card" style="background:#e3f2fd;">
+            <div class="macro-value" style="color:#1565c0;">{{ targets.protein_g }}g</div>
+            <div class="macro-label">Protein</div>
+        </div>
+        <div class="macro-card" style="background:#fff8e1;">
+            <div class="macro-value" style="color:#f57f17;">{{ targets.carbs_g }}g</div>
+            <div class="macro-label">Carbs</div>
+        </div>
+        <div class="macro-card" style="background:#fce4ec;">
+            <div class="macro-value" style="color:#c62828;">{{ targets.fat_g }}g</div>
+            <div class="macro-label">Fat</div>
+        </div>
+        <div class="macro-card" style="background:#f3e5f5;">
+            <div class="macro-value" style="color:#7b1fa2;">{{ targets.fiber_g }}g</div>
+            <div class="macro-label">Fiber</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="flex-header">
+        <h3>AI Nutrition Suggestions</h3>
+        {% if logs %}
+        <form action="/get-suggestions" method="post">
+            <button type="submit" class="btn btn-sm">
+                {% if suggestions %}Refresh Suggestions{% else %}Get Suggestions{% endif %}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if suggestions %}
+    <ul class="suggestion-list">
+        {% for suggestion in suggestions %}
+        <li class="suggestion-item">{{ suggestion }}</li>
+        {% endfor %}
+    </ul>
+    {% elif logs %}
+    <p class="empty-text">Click the button to get AI-powered suggestions based on your targets and today's meals.</p>
+    {% else %}
+    <p class="empty-text">Log some meals first to get personalized suggestions.</p>
+    {% endif %}
+</div>
+
+{% if logs %}
+<div class="card">
+    <h3>Logged Meals</h3>
+
+    {% for log in logs %}
+    <div class="meal-log-item">
+        <div>
+            <strong>{{ log.recipe_name }}</strong>
+            {% if log.portions and log.portions != 1 %}
+            <span class="meal-type-tag">({{ log.portions }}x)</span>
+            {% endif %}
+            <span class="meal-type-tag">{{ log.meal_type or '' }}</span>
+            <br>
+            <span class="meal-info-sub">
+                {{ "%.0f"|format(log.calories) }} kcal &nbsp;|&nbsp;
+                P: {{ "%.1f"|format(log.protein_g) }}g &nbsp;|&nbsp;
+                C: {{ "%.1f"|format(log.carbs_g) }}g &nbsp;|&nbsp;
+                F: {{ "%.1f"|format(log.fat_g) }}g
+            </span>
+        </div>
+        <form action="/delete-log/{{ log.id }}" method="post">
+            <button type="submit" class="btn btn-sm btn-danger"
+                    onclick="return confirm('Remove this entry?');">
+                Remove
+            </button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card text-center" style="display:flex; justify-content:center; gap:15px;">
+    <a href="/" class="btn">Log Another Meal</a>
+    <a href="/add-meal" class="btn btn-outline">Add Manually</a>
+</div>
+
+{% endblock %}

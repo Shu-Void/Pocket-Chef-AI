@@ -1,0 +1,95 @@
+<!-- templates/signup.html -->
+{% extends "base.html" %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block content %}
+<style>
+    .signup-card {
+        max-width: 450px;
+        margin: 40px auto;
+    }
+
+    .signup-title-desc {
+        margin-top: 8px;
+        margin-bottom: 20px;
+        color: #666;
+    }
+
+    .signup-form button.btn-full {
+        width: 100%;
+    }
+
+    .signup-footer {
+        margin-top: 18px;
+        text-align: center;
+        color: #666;
+    }
+
+    .signup-footer a {
+        color: #2e7d32;
+        text-decoration: none;
+    }
+
+    .signup-footer a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="card signup-card">
+    <h2>Create Account</h2>
+    <p class="signup-title-desc">
+        Sign up to start tracking your meals.
+    </p>
+
+    <form method="post" class="signup-form">
+        <label>Username</label>
+        <input type="text" name="username" required autofocus>
+
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="Min 4 characters">
+
+        <label>Height (cm)</label>
+        <input type="number" name="height" required>
+
+        <label>Weight (kg)</label>
+        <input type="number" name="weight" required>
+
+        <label>Age</label>
+        <input type="number" name="age" required>
+
+        <label>Gender</label>
+        <select name="gender">
+            <option value="">Select</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+        
+        <label>Activity Level</label>
+        <select name="activity_level">
+            <option value="">Select</option>
+            <option value="Sedentary">Sedentary</option>
+            <option value="Lightly Active">Light</option>
+            <option value="Moderately Active">Moderate</option>
+            <option value="Very Active">Active</option>
+        </select>
+
+        <label>Active Goal</label>
+        <select name="active_goal">
+            <option value="">Select</option>
+            <option value="Maintain">Maintain</option>
+            <option value="Lose fat">Lose fat</option>
+            <option value="Build muscle">Build muscle</option>
+            <option value="Recompose">Recompose</option>
+        </select>
+
+        <button type="submit" class="btn btn-full">Create Account</button>
+    </form>
+
+    <p class="signup-footer">
+        Already have an account? <a href="/login">Login</a>
+    </p>
+</div>
+
+{% endblock %}

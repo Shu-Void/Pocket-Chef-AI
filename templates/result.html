@@ -1,0 +1,88 @@
+<!-- templates/result.html -->
+{% extends "base.html" %}
+
+{% block title %}Result{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <h2>Detection Result</h2>
+
+    {% if image_name %}
+    <div style="margin-top:20px;">
+        <img src="/uploads/{{ image_name }}">
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Detected Vegetables</h2>
+    <ul>
+        {% for veg in vegetables %}
+        <li>{{ veg }}</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="card">
+    <h2>Recipe Suggestions</h2>
+
+    {% for recipe in recipes %}
+    <div class="recipe">
+        <h3>{{ recipe.name }}</h3>
+
+        <p style="margin-top:10px;">{{ recipe.description }}</p>
+
+        <h4 style="margin-top:15px;">Ingredients</h4>
+        <ul>
+            {% for item in recipe.ingredients %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+
+        <h4 style="margin-top:15px;">Steps</h4>
+        <ol>
+            {% for step in recipe.steps %}
+            <li>{{ step }}</li>
+            {% endfor %}
+        </ol>
+
+        <!-- Nutrition Info -->
+        {% if recipe.nutrition_per_serving %}
+        <div style="margin-top:15px; padding:12px; background:#f1f8e9; border-radius:8px;">
+            <h4>Nutrition (per serving)</h4>
+            <p style="margin-top:6px;">
+                Calories: <strong>{{ recipe.nutrition_per_serving.calories }} kcal</strong> &nbsp;|&nbsp;
+                Protein: <strong>{{ recipe.nutrition_per_serving.protein_g }}g</strong> &nbsp;|&nbsp;
+                Carbs: <strong>{{ recipe.nutrition_per_serving.carbs_g }}g</strong> &nbsp;|&nbsp;
+                Fat: <strong>{{ recipe.nutrition_per_serving.fat_g }}g</strong> &nbsp;|&nbsp;
+                Fiber: <strong>{{ recipe.nutrition_per_serving.fiber_g }}g</strong>
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Log Button -->
+        {% if session.get('user_id') %}
+        <form action="/log-recipe" method="post" style="margin-top:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <input type="hidden" name="recipe_index" value="{{ loop.index0 }}">
+            <label style="font-size:14px; margin:0;">Portions:</label>
+            <input type="number" name="portions" value="1" min="0.25" max="10" step="0.25"
+                   style="width:80px; margin:0; padding:8px; font-size:14px;">
+            <button type="submit" class="btn btn-sm btn-outline">
+                Log This Recipe
+            </button>
+        </form>
+        {% else %}
+        <p style="margin-top:12px; color:#888; font-size:13px;">
+            <a href="/login" style="color:#2e7d32;">Log in</a> to track this meal's nutrition.
+        </p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card" style="text-align:center;">
+    <a href="/"><button class="btn">Try Another Image</button></a>
+</div>
+
+{% endblock %}

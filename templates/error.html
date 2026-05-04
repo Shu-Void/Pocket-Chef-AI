@@ -1,0 +1,20 @@
+<!-- templates/error.html -->
+{% extends "base.html" %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+
+<div class="card" style="text-align:center;">
+    <h2>Something Went Wrong</h2>
+
+    <p style="margin-top:18px; font-size:16px;">
+        {{ message }}
+    </p>
+
+    <div style="margin-top:25px;">
+        <a href="/"><button class="btn">Go Back</button></a>
+    </div>
+</div>
+
+{% endblock %}

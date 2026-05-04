@@ -1,0 +1,77 @@
+<!-- templates/add_meal.html -->
+{% extends "base.html" %}
+
+{% block title %}Add Meal{% endblock %}
+
+{% block content %}
+
+<style>
+    .add-meal-card { max-width: 550px; margin: 30px auto; }
+    .nutrition-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 20px;
+    }
+    .nutrition-grid label { margin-top: 10px; }
+    .full-width { grid-column: 1 / -1; }
+</style>
+
+<div class="card add-meal-card">
+    <h2>Add Meal Manually</h2>
+    <p style="margin-top:8px; margin-bottom:20px; color:#666;">
+        Log something you ate outside the app. Enter nutrition values per serving — they'll be multiplied by portions.
+    </p>
+
+    <form method="post">
+
+        <label>Dish Name</label>
+        <input type="text" name="recipe_name" required placeholder="e.g. Dal Tadka, Chicken Salad" autofocus>
+
+        <div class="nutrition-grid">
+            <div>
+                <label>Meal Type</label>
+                <select name="meal_type">
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Snacks">Snacks</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label>Portions</label>
+                <input type="number" name="portions" value="1" min="0.25" max="10" step="0.25">
+            </div>
+        </div>
+
+        <h4 style="margin-top:10px; margin-bottom:5px;">Nutrition (per serving)</h4>
+
+        <div class="nutrition-grid">
+            <div>
+                <label>Calories (kcal)</label>
+                <input type="number" name="calories" value="0" min="0" step="1">
+            </div>
+            <div>
+                <label>Protein (g)</label>
+                <input type="number" name="protein_g" value="0" min="0" step="0.1">
+            </div>
+            <div>
+                <label>Carbs (g)</label>
+                <input type="number" name="carbs_g" value="0" min="0" step="0.1">
+            </div>
+            <div>
+                <label>Fat (g)</label>
+                <input type="number" name="fat_g" value="0" min="0" step="0.1">
+            </div>
+            <div class="full-width">
+                <label>Fiber (g)</label>
+                <input type="number" name="fiber_g" value="0" min="0" step="0.1">
+            </div>
+        </div>
+
+        <button type="submit" class="btn" style="width:100%; margin-top:20px;">Add Meal</button>
+
+    </form>
+</div>
+
+{% endblock %}

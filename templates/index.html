@@ -1,0 +1,45 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <h2>Upload Vegetable Image</h2>
+    <p style="margin-top:10px; margin-bottom:20px;">
+        Upload an image and choose your preferences to generate recipes.
+    </p>
+
+    <form action="/analyze" method="post" enctype="multipart/form-data">
+
+        <label>Select Image</label>
+        <input type="file" name="image" accept="image/*" required>
+
+        <label>Dietary Preference</label>
+        <select name="diet">
+            <option value="">None</option>
+            <option value="Vegan">Vegan</option>
+            <option value="Vegetarian">Vegetarian</option>
+            <option value="Keto">Keto</option>
+            <option value="High Protein">High Protein</option>
+        </select>
+
+        <label>Cuisine</label>
+        <input type='text' name="cuisine" placeholder="Enter cuisine...">
+            
+        <label>Meal Type</label>
+        <select name="meal_type">
+            <option value="">Any</option>
+            <option value="Breakfast">Breakfast</option>
+            <option value="Lunch">Lunch</option>
+            <option value="Dinner">Dinner</option>
+            <option value="Snacks">Snacks</option>
+        </select>
+
+        <button type="submit" class="btn">Analyze Image</button>
+
+    </form>
+</div>
+
+{% endblock %}

@@ -16,50 +16,33 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# --------------------------------------------------
 # LOAD ENV
-# --------------------------------------------------
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# --------------------------------------------------
 # APP CONFIG
-# --------------------------------------------------
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "uploads"
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "pocket-chef-secret-key-change-me")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///pocket_chef.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# --------------------------------------------------
 # INIT DATABASE
-# --------------------------------------------------
 db.init_app(app)
 
 with app.app_context():
     db.create_all()
 
-# --------------------------------------------------
-# PATHS
-# --------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
 UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# --------------------------------------------------
 # LOAD YOLO MODEL
-# --------------------------------------------------
 MODEL_PATH = "vegetable_detector_yolov8n.pt"
 model = YOLO(MODEL_PATH)
 
-# --------------------------------------------------
 # LOAD GEMINI CLIENT
-# --------------------------------------------------
 client = genai.Client(api_key=GEMINI_API_KEY)
-
-# --------------------------------------------------
-# GEMINI CALL WITH AUTO-RETRY
-# --------------------------------------------------
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 def gemini_generate(prompt, max_retries=5):
@@ -91,9 +74,7 @@ def gemini_generate(prompt, max_retries=5):
         "Please wait a minute and try again."
     )
 
-# --------------------------------------------------
 # AUTH DECORATOR
-# --------------------------------------------------
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -103,9 +84,9 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
-# --------------------------------------------------
+
+
 # NUTRITION TARGET CALCULATOR (Mifflin-St Jeor)
-# --------------------------------------------------
 ACTIVITY_MULTIPLIERS = {
     "Sedentary": 1.2,
     "Lightly Active": 1.375,
@@ -166,9 +147,9 @@ def calculate_nutrition_targets(user):
         "fiber_g": round(fiber_g, 1),
     }
 
-# --------------------------------------------------
+
+
 # DETECT VEGETABLES
-# --------------------------------------------------
 def detect_vegetables(image_path):
     results = model.predict(
         source=str(image_path),
@@ -188,9 +169,9 @@ def detect_vegetables(image_path):
 
     return list(dict.fromkeys(detected))
 
-# --------------------------------------------------
+
+
 # BUILD RECIPE PROMPT (with nutrition)
-# --------------------------------------------------
 def build_recipe_prompt(vegetables, diet=None, cuisine=None, meal_type=None):
     veg_text = ", ".join(vegetables)
 
@@ -237,9 +218,8 @@ Format:
 }}
 """
 
-# --------------------------------------------------
+
 # GENERATE RECIPES
-# --------------------------------------------------
 def generate_recipes(vegetables, diet=None, cuisine=None, meal_type=None):
     prompt = build_recipe_prompt(
         vegetables=vegetables,
@@ -257,9 +237,9 @@ def generate_recipes(vegetables, diet=None, cuisine=None, meal_type=None):
     except Exception as e:
         raise e  # Let the /analyze route catch it and show error page
 
-# --------------------------------------------------
+
+
 # GENERATE NUTRITION SUGGESTIONS
-# --------------------------------------------------
 def generate_nutrition_suggestions(totals, targets, goal):
     prompt = f"""
 You are a nutritionist AI assistant.
@@ -298,20 +278,11 @@ Return ONLY valid JSON:
     except Exception:
         return ["Eat a balanced meal with protein, veggies, and whole grains."]
 
-# ==================================================
-# ROUTES
-# ==================================================
-
-# --------------------------------------------------
-# HOME
-# --------------------------------------------------
+# ROUTES ************************
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# --------------------------------------------------
-# SIGNUP
-# --------------------------------------------------
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
@@ -331,7 +302,6 @@ def signup():
             flash("Username already taken.", "error")
             return render_template("signup.html")
 
-        # Profile fields
         try:
             height = float(request.form.get("height", 0))
             weight = float(request.form.get("weight", 0))
@@ -368,9 +338,6 @@ def signup():
 
     return render_template("signup.html")
 
-# --------------------------------------------------
-# LOGIN
-# --------------------------------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -390,18 +357,12 @@ def login():
 
     return render_template("login.html")
 
-# --------------------------------------------------
-# LOGOUT
-# --------------------------------------------------
 @app.route("/logout")
 def logout():
     session.clear()
     flash("Logged out.", "success")
     return redirect(url_for("home"))
 
-# --------------------------------------------------
-# ANALYZE IMAGE
-# --------------------------------------------------
 @app.route("/analyze", methods=["POST"])
 def analyze_image():
     try:
@@ -414,13 +375,11 @@ def analyze_image():
         cuisine = request.form.get("cuisine")
         meal_type = request.form.get("meal_type")
 
-        # Save image
         file_ext = Path(image.filename).suffix
         unique_name = f"{uuid.uuid4()}{file_ext}"
         file_path = UPLOAD_DIR / unique_name
         image.save(file_path)
 
-        # Detect vegetables
         vegetables = detect_vegetables(file_path)
 
         if not vegetables:
@@ -429,7 +388,6 @@ def analyze_image():
                 message="No vegetables detected in uploaded image."
             )
 
-        # Generate recipes (now with nutrition)
         recipes = generate_recipes(
             vegetables=vegetables,
             diet=diet,
@@ -437,7 +395,6 @@ def analyze_image():
             meal_type=meal_type
         )
 
-        # Store recipes in session for logging
         session["last_recipes"] = recipes
         session["last_meal_type"] = meal_type
 
@@ -451,9 +408,6 @@ def analyze_image():
     except Exception as e:
         return render_template("error.html", message=f"Error: {str(e)}")
 
-# --------------------------------------------------
-# LOG RECIPE NUTRITION
-# --------------------------------------------------
 @app.route("/log-recipe", methods=["POST"])
 @login_required
 def log_recipe():
@@ -492,9 +446,6 @@ def log_recipe():
         flash(f"Could not log recipe: {str(e)}", "error")
         return redirect(url_for("home"))
 
-# --------------------------------------------------
-# ADD MANUAL MEAL
-# --------------------------------------------------
 @app.route("/add-meal", methods=["GET", "POST"])
 @login_required
 def add_meal():
@@ -537,9 +488,6 @@ def add_meal():
 
     return render_template("add_meal.html")
 
-# --------------------------------------------------
-# DASHBOARD
-# --------------------------------------------------
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -551,7 +499,6 @@ def dashboard():
         logged_date=today
     ).order_by(NutritionLog.logged_at.desc()).all()
 
-    # Calculate totals
     totals = {
         "calories": sum(l.calories for l in logs),
         "protein_g": sum(l.protein_g for l in logs),
@@ -560,10 +507,8 @@ def dashboard():
         "fiber_g": sum(l.fiber_g for l in logs),
     }
 
-    # Personalized targets
     targets = calculate_nutrition_targets(user)
 
-    # Show suggestions only if redirected from /get-suggestions
     suggestions = session.pop("nutrition_suggestions", [])
 
     return render_template(
@@ -576,9 +521,6 @@ def dashboard():
         today=today
     )
 
-# --------------------------------------------------
-# GET AI SUGGESTIONS (on-demand)
-# --------------------------------------------------
 @app.route("/get-suggestions", methods=["POST"])
 @login_required
 def get_suggestions():
@@ -608,9 +550,6 @@ def get_suggestions():
 
     return redirect(url_for("dashboard"))
 
-# --------------------------------------------------
-# DELETE LOG ENTRY
-# --------------------------------------------------
 @app.route("/delete-log/<int:log_id>", methods=["POST"])
 @login_required
 def delete_log(log_id):
@@ -625,16 +564,10 @@ def delete_log(log_id):
 
     return redirect(url_for("dashboard"))
 
-# --------------------------------------------------
-# SERVE UPLOADED IMAGES
-# --------------------------------------------------
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
     from flask import send_from_directory
     return send_from_directory(UPLOAD_DIR, filename)
 
-# --------------------------------------------------
-# RUN APP
-# --------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)

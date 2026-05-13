@@ -5,3 +5,4 @@ google-genai>=1.65.0
 python-dotenv>=1.2.1
 python-multipart>=0.0.27
 ultralytics>=8.4.43
+gunicorn
